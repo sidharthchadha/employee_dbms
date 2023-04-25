@@ -23,7 +23,36 @@ def login():
    return render_template("employee.html")
    # return 'Logged in as {}.'.format(username)
 
-# def middleware():
+@app.route('/client',methods=['POST'])
+def get_client():
+   data = request.json
+  
+   #get projects function
+   projects = [
+            {"id": "1", "name": "Project A"},
+            {"id": "2", "name": "Project B"},
+            {"id": "3", "name": "Project C"},
+            {"id": "4", "name": "Project D"},
+            {"id": "5", "name": "Project E"},
+            {"id": "6", "name": "Project F"},
+            {"id": "7", "name": "Project G"},
+            {"id": "8", "name": "Project H"},
+            {"id": "9", "name": "Project I"},
+            {"id": "10", "name": "Project J"},
+            {"id": "11", "name": "Project K"}
+        ]
+
+   # print(projects[0:5])
+    # show in  reactjs
+   return {
+        'name':"sid", 
+        'phone': "8xxxxxx8",
+        'institution':"IIT pkd",
+        'email':"sid@gmail.com",
+        'projects':projects,
+        'num_projects':len(projects)
+      }
+
+
 if __name__ == "__main__":
-      
    app.run(host="0.0.0.0")
