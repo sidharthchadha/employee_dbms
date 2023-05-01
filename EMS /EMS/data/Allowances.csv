@@ -1,0 +1,29 @@
+"Allowance id","Role id","Name","Amount","Frequency_per_year","Year","employee id"
+,,,,,,
+210001,3001,"Project bonus",1500,12,2021,1
+210002,2001,"Project bonus",1000,12,2021,2
+210003,1001,"Project bonus",500,12,2021,3
+210004,4001,"Project bonus",2000,12,2021,4
+210005,2003,"Project bonus",1000,12,2021,5
+210006,3001,"Project bonus",1500,12,2021,6
+210007,5002,"Project bonus",2500,12,2021,7
+210008,2001,"Project bonus",1000,12,2021,8
+210009,2001,"Project bonus",1000,12,2021,11
+210010,5002,"Project bonus",2500,12,2021,12
+210011,4001,"Project bonus",2000,12,2021,13
+210012,3001,"Project bonus",1500,12,2021,14
+210013,2003,"Project bonus",1000,12,2021,15
+210014,1001,"Project bonus",500,12,2021,16
+210015,5002,"Project bonus",2500,12,2021,17
+210016,4002,"Project bonus",2000,12,2021,18
+210017,3001,"Project bonus",1500,12,2021,19
+210018,2001,"Project bonus",1000,12,2021,20
+210019,1001,"Project bonus",500,12,2021,21
+210020,5003,"Project bonus",2500,12,2021,22
+210021,4002,"Project bonus",2000,12,2021,23
+210022,3001,"Project bonus",1500,12,2021,24
+210023,2002,"Project bonus",1000,12,2021,25
+210024,1001,"Project bonus",500,12,2021,26
+210025,1001,"Project bonus",500,12,2021,28
+210026,2002,"Project bonus",1000,12,2021,29
+210027,5004,"Project bonus",2500,12,2021,12

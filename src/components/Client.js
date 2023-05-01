@@ -5,6 +5,7 @@ class Client extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      id:this.props.id,
       name: "sid",
       phone: "",
       institution: "",
@@ -22,9 +23,7 @@ class Client extends React.Component {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        name: 'sid',
-        startindex:this.state.startIndex,
-        endindex:this.state.endIndex,
+        id:this.state.id
       })
     })
       .then(response => response.json())
@@ -61,10 +60,10 @@ class Client extends React.Component {
     return (
       <div className="client-container">
         <div className="client-info">
-          <h2>{this.name}</h2>
-          <p>Phone: {this.phone}</p>
-          <p>Institution: {this.institution}</p>
-          <p>Email: {this.email}</p>
+          <h2>{this.state.name}</h2>
+          <p>Phone: {this.state.phone}</p>
+          <p>Institution: {this.state.institution}</p>
+          <p>Email: {this.state.email}</p>
         </div>
         <div className="client-projects-box">
           <h3>Projects</h3>

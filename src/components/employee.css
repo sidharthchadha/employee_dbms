@@ -1,0 +1,100 @@
+/* employee.css */
+
+/* Apply vivid color theme */
+body {
+  background-color: #f9f9f9;
+  color: #333333;
+}
+
+/* Add lining to tables */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #fff;
+}
+
+td,
+th {
+  border: 1px solid #cccccc;
+  padding: 10px;
+}
+
+/* Apply vibrant colors to headings */
+h2,
+h3 {
+  color: #3366cc;
+}
+
+/* Apply modern fonts */
+p {
+  font-family: "Helvetica", sans-serif;
+}
+
+/* Add curvy lines for a modern look */
+.client-container {
+  border: 2px solid #dddddd;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 20px;
+}
+
+.client-info {
+  margin-bottom: 20px;
+  text-decoration-color: #555555;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.pagination .btn {
+  background-color: #3366cc;
+  color: #ffffff;
+  padding: 5px 10px;
+  margin: 0 5px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.pagination .btn:disabled {
+  background-color: #888888;
+  cursor: not-allowed;
+}
+
+/* Update dropdown color to match the theme */
+.select-dropdown {
+  background-color: #3366cc;
+  color: #ffffff;
+  border: 1px solid #ffffff;
+}
+
+/* Add hover effect to buttons */
+.btn {
+  background-color: #3366cc;
+  color: #ffffff;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background-color: #444444;
+}
+
+/* Add hover effect to accordion buttons */
+.accordion-button {
+  background-color: #3366cc;
+  color: #ffffff;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.accordion-button:hover {
+  background-color: #444444;
+}

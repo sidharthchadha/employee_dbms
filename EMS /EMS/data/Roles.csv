@@ -1,0 +1,18 @@
+"Role id","Department","Name","Role level"
+,,,
+1001,"R&D","Training assistant",1
+1002,"Product development","SDE",1
+1003,"Marketing","Analyst",1
+2001,"R&D","Training Instructor",2
+2002,"Product development","Senior SDE",2
+2003,"Marketing","Intelligence analyst",2
+3001,"R&D","Assessor",3
+3002,"Product development","Team lead",3
+3003,"Marketing","Business Intelligence analyst",3
+4001,"IT Services","Company Systems manger",4
+4002,"Product development","Project manager",4
+4003,"Marketing","Market research analyst",4
+5001,"HR","HR Manager",5
+5002,"R&D","R&D Manager",5
+5003,"Marketing","Marketing director",5
+5004,"Product development","Production Manager",5

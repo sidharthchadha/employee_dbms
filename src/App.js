@@ -1,88 +1,93 @@
 import React, { useState } from 'react';
+import Employee from './components/Employee';
 import Client from './components/Client';
-import "../src/loginpage.css"
+import Hr from './components/Hr';
+
+import './loginpage.css';
+
+const App = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [id, setId] = useState('');
+  const [loginType, setLoginType] = useState('employee'); // Default login type is 'employee'
 
 
-function App() {
+  const handleUsernameChange = (e) => {
+    setUsername(e.target.value);
+  };
 
-  const [islogged, setislogged] = useState(0);
-  const [error, seterror] = useState(0);
-  const [username, setusername] = useState("");
-  const [password, setpassword] = useState("");
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+  };
+  const handleLoginTypeChange = (e) => {
+    setLoginType(e.target.value);
+  };
 
-  const set_password = (event) => {
-    setpassword(event.target.value);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    fetch('/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, password, loginType }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          setIsLoggedIn(true);
+          setId(data.id);
+        } else {
+          setError(data.error);
+        }
+      })
+      .catch((error) => {
+        console.log('Error:', error);
+        setError('An error occurred');
+      });
+  };
+
+  if (isLoggedIn && loginType === 'employee' ) {
+    return <Employee id={id}/>;
   }
-  var set_username = (event) => {
-    setusername(event.target.value);
-
+  if (isLoggedIn && loginType === 'hr' ) {
+    return <Hr />;
+  }
+  if (isLoggedIn && loginType === 'client' ) {
+    return <Client id={id} />;
   }
 
-  const Checklogin = () => {
-    console.log(username);
-    if (username === "sid") {
-      seterror(0);
-      setislogged(1);
-    }
-    else {
-      seterror(1);
-    }
-  }
-  
-  const errormsg = (
-    <div className="alert alert-danger alert-dismissible fade show" role="alert">
-      <strong>username / password not found</strong>
-    </div>
-  );
-
-  const render_login_form = (
-    <div className="div-center">
-    <div className="card text-center ">
-      <div class="card-header">
-        Login
-      </div>
-      <div class="card-body">
-        <form>
-          <div className="mb-3  ">
-            <label className="form-label">Username</label>
-            <input type="text" className="form-control" id="username" value={username} onChange={set_username} />
-
+  return (
+    <div className="container">
+      <div className="card">
+        <h2>Login Form</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Username:</label>
+            <input type="text" value={username} onChange={handleUsernameChange} />
           </div>
-          <div class="mb-3 ">
-            <label className="form-label">Password</label>
-            <input type="password" className="form-control" value={password} id="password" onChange={set_password} />
+          <div className="form-group">
+            <label>Password:</label>
+            <input type="password" value={password} onChange={handlePasswordChange} />
           </div>
-          <button type="submit" className="btn btn-primary position:absolute start:50" onClick={Checklogin}>Submit</button>
+          <div className="form-group">
+            <label>Login Type:</label>
+            <select value={loginType} onChange={handleLoginTypeChange}>
+              <option value="employee">Employee</option>
+              <option value="hr">HR</option>
+              <option value="client">Client</option>
+            </select>
+          </div>
+          {error && <div className="error-message">{error}</div>}
+          <button type="submit">Login</button>
         </form>
       </div>
     </div>
-    </div>
   );
-
-  if (islogged) {
-    return (
-      <div>
-        <Client />
-      </div>
-    );
-  }
-  else if (error) {
-    return (
-      <div>
-        {errormsg}
-        {render_login_form}
-      </div>
-    );
-  }
-  else {
-    return (
-      <div>
-        {render_login_form}
-      </div>
-    );
-  }
-
-}
-
+};
 
 export default App;
