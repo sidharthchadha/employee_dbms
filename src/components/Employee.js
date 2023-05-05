@@ -406,7 +406,7 @@ class Employee extends React.Component {
                 <h3>Projects Headed</h3>
                 {this.state.project_heading.slice(this.state.startIndex3, this.state.endIndex3).map(project => (
                   <div key={project.id}>
-                    <p><strong>Project ID : {project.name}</strong></p>
+                    <p><strong>Project ID : {project.main_dept}</strong></p>
                     <div className="accordion" id="accordionExample">
                       <div className="accordion-item">
                         <h2 className="accordion-header">

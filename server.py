@@ -12,6 +12,8 @@ from sqlalchemy.engine import create_engine
 from sqlalchemy.sql import text
 sqlalchemy.__version__
 app = Flask(__name__)
+from datetime import datetime
+
 
 log_file = 'project_log.txt'
 
@@ -180,10 +182,7 @@ def get_employee():
         }
         completed_projects.append(project_dict)
 
-    # Print the retrieved project information
-    # for project in completed_projects:
-    #     print(project)
-    #     print()
+
 
     last_6_transactions = []
     query = "SELECT id, empid, transfer_date, amount, status FROM transactions WHERE empid = %s ORDER BY id DESC LIMIT 6;"
@@ -388,7 +387,6 @@ def get_employee_proj():
 
 
     
-
 @app.route('/add_review', methods=['POST'])
 def set_review():
     data = request.json
@@ -423,11 +421,21 @@ def write_to_log(entry):
 
 
 def read_log():
-    """Read the contents of the log file"""
-    with open(log_file, "r") as f:
-        log_entries = f.readlines()
+    log_entries = []
+    with open('project_log.txt', 'r') as f:
+        for line in f:
+            log_entries.append(line.strip())
     return log_entries
 
+def get_all_projects():
+    log_entries = read_log()
+    project_data = []
+    for entry in log_entries:
+        entry_id = entry.split(" - ")[0].split(": ")[1]
+        client_id = entry.split(" - ")[1].split(": ")[1].split(",")[0]
+        description = entry.split("Description: ")[1]
+        project_data.append({"entry_id": entry_id, "client_id": client_id, "description": description})
+    return project_data
 
 @app.route("/add_project", methods=["POST"])
 def add_project():
@@ -447,20 +455,6 @@ def add_project():
     return jsonify({"success": True, "entry_id": entry_id})
 
 
-@app.route("/delete_project/<int:entry_id>", methods=["DELETE"])
-def delete_project(entry_id):
-    log_entries = read_log()
-
-    if entry_id < 1 or entry_id > len(log_entries):
-        return jsonify({"success": False, "message": "Invalid entry ID"})
-
-    # Remove the entry from the log file
-    with open(log_file, "w") as f:
-        for i, entry in enumerate(log_entries):
-            if i + 1 != entry_id:
-                f.write(entry)
-
-    return jsonify({"success": True, "message": "Entry deleted successfully"})
 
 
 @app.route("/log_entries", methods=["GET"])
@@ -492,37 +486,108 @@ def handle_edit_details():
     return {'message': 'Empployee details updated successfully'}
 
 
+
+
 @app.route('/hr', methods=['POST'])
 def get_admin():
     data = request.json
+    conn = psycopg2.connect("postgresql://postgres:postgres@localhost:5432/ems")
+    cursor = conn.cursor()
 
     # get projects function
-    cur_projects = [
-        {"id": "1", "name": "Project A"},
-        {"id": "2", "name": "Project B"},
-        {"id": "3", "name": "Project C"},
-        {"id": "4", "name": "Project D"},
-        {"id": "5", "name": "Project E"},
-        {"id": "6", "name": "Project F"},
-        {"id": "7", "name": "Project G"},
-        {"id": "8", "name": "Project H"},
-        {"id": "9", "name": "Project I"},
-        {"id": "10", "name": "Project J"},
-        {"id": "11", "name": "Project K"}
-    ]
-    completed_projects = [
-        {"id": "1", "name": "Project A"},
-        {"id": "2", "name": "Project B"},
-        {"id": "3", "name": "Project C"},
-        {"id": "4", "name": "Project D"},
-        {"id": "5", "name": "Project E"},
-        {"id": "6", "name": "Project F"},
-        {"id": "7", "name": "Project G"},
-        {"id": "8", "name": "Project H"},
-        {"id": "9", "name": "Project I"},
-        {"id": "10", "name": "Project J"},
-        {"id": "11", "name": "Project K"}
-    ]
+    query = """
+SELECT
+    p.id AS project_id,
+    p.main_dept,
+    p.start_date,
+    p.status,
+    p.time_taken,
+    p.proj_type,
+    e1.first_name AS head_one_first_name,
+    e1.last_name AS head_one_last_name,
+    e1.ph_num AS head_one_ph_num,
+    e2.first_name AS head_two_first_name,
+    e2.last_name AS head_two_last_name,
+    e2.ph_num AS head_two_ph_num,
+    cp.feedback,
+    cp.review
+FROM
+    projects p
+    LEFT JOIN employee e1 ON p.proj_head_one = e1.id
+    LEFT JOIN employee e2 ON p.proj_head_two = e2.id
+    LEFT JOIN clientproject cp ON p.id = cp.proj_id
+WHERE
+    p.id IN (
+        SELECT DISTINCT
+            ps.proj_id
+        FROM
+            performancescore ps
+        WHERE
+            ps.performance IS NULL OR ps.performance = null
+    );
+"""
+    
+    cursor.execute(query)
+    result = cursor.fetchall()
+
+    cur_projects = []
+    for project in result:
+        project_id, main_dept, start_date, status, time_taken, proj_type, head_one_first_name, \
+            head_one_last_name, head_one_ph_num, head_two_first_name, head_two_last_name, \
+            head_two_ph_num, feedback, review = project
+
+        project_dict = {
+            "project_id": project_id,
+            "main_dept": main_dept,
+            "start_date": start_date.strftime("%Y-%m-%d"),
+            "status": status,
+            "time_taken": time_taken,
+            "proj_type": proj_type,
+            "head_one_first_name": head_one_first_name,
+            "head_one_last_name": head_one_last_name,
+            "head_one_ph_num": head_one_ph_num,
+            "head_two_first_name": head_two_first_name,
+            "head_two_last_name": head_two_last_name,
+            "head_two_ph_num": head_two_ph_num,
+            "review": review
+        }
+        cur_projects.append(project_dict)
+
+    query = """
+SELECT p.id AS project_id, p.main_dept, p.start_date, p.status, p.time_taken, p.proj_type,
+       e1.first_name AS head_one_first_name, e1.last_name AS head_one_last_name,
+       e1.ph_num AS head_one_ph_num, e2.first_name AS head_two_first_name,
+       e2.last_name AS head_two_last_name, e2.ph_num AS head_two_ph_num,
+       cp.feedback, cp.review
+FROM projects p
+JOIN employee e1 ON p.proj_head_one = e1.id
+JOIN employee e2 ON p.proj_head_two = e2.id
+JOIN clientproject cp ON p.id = cp.proj_id
+WHERE p.status = 'Completed';
+"""
+    completed_projects = []
+    cursor.execute(query)
+    for row in cursor.fetchall():
+        project_id, main_dept, start_date, status, time_taken, proj_type, \
+        head_one_first_name, head_one_last_name, head_one_ph_num, \
+        head_two_first_name, head_two_last_name, head_two_ph_num, feedback, review = row
+
+        project_dict = {
+            "project_id": project_id,
+            "main_dept": main_dept,
+            "start_date": start_date.strftime("%Y-%m-%d"),
+            "status": status,
+            "time_taken": time_taken,
+            "proj_type": proj_type,
+            "head_one_first_name": head_one_first_name,
+            "head_one_last_name": head_one_last_name,
+            "head_one_ph_num": head_one_ph_num,
+            "head_two_first_name": head_two_first_name,
+            "head_two_last_name": head_two_last_name,
+            "head_two_ph_num": head_two_ph_num,
+            "review": review
+        }
+        completed_projects.append(project_dict)
 
     last_6_transactions = [
         {'part1': 'Entry 1 Part 1', 'part2': 'Entry 1 Part 2', 'part3': 'Entry 1 Part 3',
@@ -538,22 +603,10 @@ def get_admin():
         {'part1': 'Entry 6 Part 1', 'part2': 'Entry 6 Part 2', 'part3': 'Entry 6 Part 3',
             'part4': 'Entry 6 Part 4', 'part5': 'Entry 6 Part 5'},
     ]
+    requested_projects = get_all_projects()
+    print(requested_projects)
 
-    project_heading = [
-        {"id": "1", "name": "Project A"},
-        {"id": "2", "name": "Project B"},
-        {"id": "3", "name": "Project C"},
-        {"id": "4", "name": "Project D"},
-        {"id": "5", "name": "Project E"},
-        {"id": "6", "name": "Project F"},
-        {"id": "7", "name": "Project G"},
-        {"id": "8", "name": "Project H"},
-        {"id": "9", "name": "Project I"},
-        {"id": "10", "name": "Project J"},
-        {"id": "11", "name": "Project K"}
-
-    ]
-    skills = ['a', 'b']
+ 
     return {
         'name': "sid",
         'phone': "8xxxxxx8",
@@ -564,10 +617,81 @@ def get_admin():
         'num_cur_projects': len(cur_projects),
         'last_6_transactions': last_6_transactions,
         'num_completed_projects': len(completed_projects),
-        'project_heading': project_heading,
-        'skills': skills
+        'requested_projects': requested_projects
 
     }
+
+@app.route('/add_proj_head_client', methods=['POST'])
+def set_project():
+    try:
+        data = request.json
+        client_id = data['client_id']
+        head1 = data['head1']
+        head2 = data['head2']
+        dept = data['dept']
+        entry_id_del=int(data['entry'])
+
+
+        conn = psycopg2.connect("postgresql://postgres:postgres@localhost:5432/ems")
+        cursor = conn.cursor()
+        project_id = 0
+
+        cursor.execute("SELECT MAX(id) FROM projects;")
+        max_id = cursor.fetchone()[0]
+        if max_id is None:
+            project_id = 1
+        else:
+            project_id = max_id + 1
+
+        status = "Ongoing"
+        start_date = datetime.now().date()
+        start_date_formatted = start_date.strftime("%Y-%m-%d")
+
+        cursor.execute("select id from roles where dept = %s;", (dept,))
+        role_id = cursor.fetchall()[-1]
+
+        cursor.execute("INSERT INTO projects (id, main_dept, proj_head_one, proj_head_two, start_date, status) VALUES (%s, %s, %s, %s, %s, %s);", (project_id, dept, head1, head2, start_date_formatted, status))
+
+        cursor.execute("INSERT INTO clientproject (proj_id, client_id) VALUES (%s, %s);", (project_id, client_id))
+
+        cursor.execute("INSERT INTO performancescore (proj_id, role_id, emp_id) VALUES (%s, %s, %s);", (project_id, role_id, head1))
+        cursor.execute("INSERT INTO performancescore (proj_id, role_id, emp_id) VALUES (%s, %s, %s);", (project_id, role_id, head2))
+        print("here")
+        with open('project_log.txt', 'r') as file:
+            lines = file.readlines()
+
+        found_entry = False
+
+        with open('project_log.txt', 'w') as file:
+            for line in lines:
+                if line.startswith('ID:'):
+                    current_entry_id = int(line.split('-')[0].split(':')[1].strip())
+                    if current_entry_id == entry_id_del:
+                        found_entry = True
+                        continue  # Skip writing the line for the entry to be deleted
+                    file.write(line)
+
+        if found_entry:
+            print("Entry deleted successfully.")
+        else:
+            print("Entry with ID {} not found.".format(entry_id_del))
+
+        conn.commit()
+        file.close()
+
+        return jsonify({"project_added": True})
+
+    except (psycopg2.Error, KeyError) as e:
+        return jsonify({"project_added": False})
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if conn is not None:
+            conn.close()
+
+
+    
 
 
 if __name__ == "__main__":
