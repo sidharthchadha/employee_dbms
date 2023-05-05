@@ -1,0 +1,92 @@
+.client-projects-box {
+    margin-top: 20px;
+    border: 1px solid #859fbd;
+    padding: 10px;
+  }
+
+  .logout-button {
+    float: right;
+    margin-top: 200px;
+    margin-right: 80px;
+    border: 1px solid #dc3545;
+  }
+
+  .edit-button {
+    float: right;
+    margin-top: 200px;
+    margin-right: 30px;
+    border: 1px solid #dc3545;
+  }
+  
+  
+  .logout-button:hover {
+    background-color: #dc3545;
+    color: #fff;
+  }
+  
+  .client-projects-box h2 {
+    margin-bottom: 20px;
+    margin-top: 20px;
+  }
+  
+  .client-projects-box p {
+    margin: 5px 0;
+  }
+  
+  .accordion-item {
+    border-bottom: 1px solid #b9c6e0;
+    margin-bottom: 10px;
+  }
+  
+  .accordion-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+  
+  .accordion-button {
+    width: 100%;
+    text-align: left;
+    background-color: #89a8c9;
+    border: none;
+    outline: none;
+  }
+  
+  .accordion-body {
+    padding: 10px;
+  }
+  
+  .btn-danger {
+    color: #88b2c4;
+    background-color: #4794ac;
+    border-color: #90a5c9;
+  }
+  
+  .btn-danger:hover {
+    background-color: #607fb8;
+    border-color: #8fa1bb;
+  }
+  
+  .pagination {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  .pagination .btn {
+    margin: 0 5px;
+  }
+  
+  .client-info {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .client-info h2 {
+    margin-bottom: 10px;
+  }
+  
+  .client-info img {
+    border-radius: 50%;
+  }
+  
+  

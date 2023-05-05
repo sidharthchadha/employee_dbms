@@ -1,267 +1,574 @@
-from flask import Flask,render_template,request,jsonify
+import math
+from textblob import TextBlob
+import logging
+import json
+from flask import Flask, render_template, request, jsonify
 import psycopg2
-#Importing Package
+# Importing Package
 import sqlalchemy
-#Database Utility Class
+# Database Utility Class
 from sqlalchemy.engine import create_engine
 # Provides executable SQL expression construct
 from sqlalchemy.sql import text
-sqlalchemy.__version__ 
-
+sqlalchemy.__version__
 app = Flask(__name__)
+
+log_file = 'project_log.txt'
+
+
+def get_sentiment_score(text):
+    blob = TextBlob(text)
+    sentiment = blob.sentiment.polarity
+    # Scale sentiment from -1 to 1 to 0 to 5
+    scaled_score = (sentiment + 1) * 2.5
+    return scaled_score
 
 
 # type
 # 1 -> employee
 # 2 -> client
 # 3 -> hr
-   
+
 @app.route('/login', methods=['POST'])
 def login():
     username = request.json.get('username')
     password = request.json.get('password')
-    type= request.json.get('loginType')
+    type = request.json.get('loginType')
     print(type)
 
-    if username == 'admin' and password == 'password' and type=='hr':
+    if username == 'admin' and password == 'password' and type == 'hr':
         print("success")
         return jsonify({'success': True})
-    
-    connection_db = psycopg2.connect("postgresql://postgres:postgres@localhost:5432/ems")
-    cur=connection_db.cursor()
-    
-    if type=='client':
-        client_id=int(username)
+
+    connection_db = psycopg2.connect(
+        "postgresql://postgres:postgres@localhost:5432/ems")
+    cur = connection_db.cursor()
+
+    if type == 'client':
+        client_id = int(username)
         select_query = "SELECT * FROM clients  WHERE id = %s;"
         cur.execute(select_query, (client_id,))
         result = cur.fetchone()
         print(result[0])
-        ret_id=str(result[0])
+        ret_id = str(result[0])
 
         if result:
             print("success")
             return jsonify({'success': True,
-                                'id':ret_id})
-        
+                            'id': ret_id})
 
-    if type=='employee':
-        employee_id = int(username) 
-        print(employee_id) 
+    if type == 'employee':
+        employee_id = int(username)
+        print(employee_id)
 
         select_query = "SELECT * FROM employee  WHERE id = %s;"
         cur.execute(select_query, (employee_id,))
         result = cur.fetchone()
         print(result[0])
-        ret_id=str(result[0])
+        ret_id = str(result[0])
 
         if result:
             print("success")
             return jsonify({'success': True,
-                                'id':ret_id})
-        
+                            'id': ret_id})
+
         else:
             print("Employee not found.")
             return jsonify({'success': False, 'error': 'Invalid username or password'})
-    
+
     return jsonify({'success': False, 'error': 'Invalid username or password'})
 
-  
-@app.route('/employee',methods=['POST'])
+
+@app.route('/employee', methods=['POST'])
 def get_employee():
     data = request.json
-    id=data['id']
-    print(id)
+    id = data['id']
 
-    conn = psycopg2.connect("postgresql://postgres:postgres@localhost:5432/ems")
+    conn = psycopg2.connect(
+        "postgresql://postgres:postgres@localhost:5432/ems")
     cur = conn.cursor()
-    
-    query = f"SELECT e.first_name, e.last_name, e.ph_num, c.institution, e.email FROM employee e LEFT JOIN clients c ON e.id = c.id WHERE e.id = {id};"
+
+    query = f"SELECT e.first_name, e.last_name, e.ph_num,  e.email \
+        FROM employee e WHERE e.id = {id};"
     cur.execute(query)
-    
+
     result = cur.fetchone()
-    first_name, last_name, phone, institution, email = result
-    cur_projects, completed_projects, last_6_transactions, project_heading, skills = None, None, None, None, None  # Add your logic to retrieve these values
-    
+    first_name, last_name, phone, email = result
+    #print(result)
+
+    query = """
+    SELECT p.id, p.main_dept, p.start_date, p.status, p.time_taken, p.proj_type,
+           emp1.first_name, emp1.last_name, emp1.ph_num,
+           emp2.first_name, emp2.last_name, emp2.ph_num
+    FROM performancescore ps
+    RIGHT JOIN projects p ON ps.proj_id = p.id
+    LEFT JOIN employee emp1 ON p.proj_head_one = emp1.id
+    LEFT JOIN employee emp2 ON p.proj_head_two = emp2.id
+    WHERE ps.emp_id = %s AND ps.performance IS NULL
+"""
+
+    cur.execute(query, (id,))
+    list_projects = cur.fetchall()
+
+    cur_projects = []
+    for project in list_projects:
+        project_id, main_dept, start_date, status, time_taken, proj_type, \
+            head_one_first_name, head_one_last_name, head_one_ph_num, \
+            head_two_first_name, head_two_last_name, head_two_ph_num = project
+
+        project_dict = {
+            "project_id": project_id,
+            "main_dept": main_dept,
+            "start_date": start_date.strftime("%Y-%m-%d"),
+            "status": status,
+            "time_taken": time_taken,
+            "proj_type": proj_type,
+            "head_one_first_name": head_one_first_name,
+            "head_one_last_name": head_one_last_name,
+            "head_one_ph_num": head_one_ph_num,
+            "head_two_first_name": head_two_first_name,
+            "head_two_last_name": head_two_last_name,
+            "head_two_ph_num": head_two_ph_num
+        }
+        cur_projects.append(project_dict)
+
+    # Print the retrieved project information
+    #for project in cur_projects:
+        #print(project)
+        #print()
+
+    query = """
+    SELECT p.id, p.main_dept, p.start_date, p.status, p.time_taken, p.proj_type,
+        emp1.first_name, emp1.last_name, emp1.ph_num,
+        emp2.first_name, emp2.last_name, emp2.ph_num,
+        cp.feedback, cp.review
+    FROM performancescore ps
+    RIGHT JOIN projects p ON ps.proj_id = p.id
+    LEFT JOIN employee emp1 ON p.proj_head_one = emp1.id
+    LEFT JOIN employee emp2 ON p.proj_head_two = emp2.id
+    LEFT JOIN (
+        SELECT DISTINCT ON (proj_id) proj_id, feedback, review
+        FROM clientproject
+    ) cp ON p.id = cp.proj_id
+    WHERE ps.emp_id = %s AND ps.performance IS NOT NULL;
+"""
+
+    cur.execute(query, (id,))
+
+    list_projects = cur.fetchall()
+
+    completed_projects = []
+    for project in list_projects:
+        project_id, main_dept, start_date, status, time_taken, proj_type, \
+            head_one_first_name, head_one_last_name, head_one_ph_num, \
+            head_two_first_name, head_two_last_name, head_two_ph_num ,feedback,review= project
+
+        project_dict = {
+            "project_id": project_id,
+            "main_dept": main_dept,
+            "start_date": start_date.strftime("%Y-%m-%d"),
+            "status": status,
+            "time_taken": time_taken,
+            "proj_type": proj_type,
+            "head_one_first_name": head_one_first_name,
+            "head_one_last_name": head_one_last_name,
+            "head_one_ph_num": head_one_ph_num,
+            "head_two_first_name": head_two_first_name,
+            "head_two_last_name": head_two_last_name,
+            "head_two_ph_num": head_two_ph_num,
+            "review": review
+        }
+        completed_projects.append(project_dict)
+
+    # Print the retrieved project information
+    # for project in completed_projects:
+    #     print(project)
+    #     print()
+
+    last_6_transactions = []
+    query = "SELECT id, empid, transfer_date, amount, status FROM transactions WHERE empid = %s ORDER BY id DESC LIMIT 6;"
+    cur.execute(query, (id,))
+    transaction_details = cur.fetchall()
+
+    # Store the breakup, date, and other details in a list
+
+    for transaction in transaction_details:
+        transaction_id, emp_id, transfer_date, amount, status = transaction
+        last_6_transactions.append({
+            'transaction_id': transaction_id,
+            'emp_id': emp_id,
+            'transfer_date': transfer_date,
+            'amount': amount,
+            'status': status
+        })
+
+    # print(last_6_transactions)
+
+    skills = []
+    query = "SELECT name_skill FROM skills WHERE emp_id = %s"
+    cur.execute(query, (id,))
+
+    # Fetch all the rows returned by the query
+    rows = cur.fetchall()
+    # Print the skills for the employee ID
+    for row in rows:
+        # print(row[0])
+        skills.append(row[0])
+
+    project_heading = []
+
+   # Execute the query to retrieve project information
+    query = """
+    SELECT p.id, p.main_dept, p.start_date, p.status, p.time_taken, p.proj_type,
+           e1.first_name, e1.last_name, e1.ph_num,
+           e2.first_name, e2.last_name, e2.ph_num
+    FROM projects p
+    JOIN employee e1 ON p.proj_head_one = e1.id
+    JOIN employee e2 ON p.proj_head_two = e2.id
+    WHERE p.proj_head_one = %s OR p.proj_head_two = %s
+"""
+
+    cur.execute(query, (id, id))
+    list_projects = cur.fetchall()
+
+    for project in list_projects:
+        project_id, main_dept, start_date, status, time_taken, proj_type, \
+            head_one_first_name, head_one_last_name, head_one_ph_num, \
+            head_two_first_name, head_two_last_name, head_two_ph_num = project
+
+        project_dict = {
+            "project_id": project_id,
+            "main_dept": main_dept,
+            "start_date": start_date.strftime("%Y-%m-%d"),
+            "status": status,
+            "time_taken": time_taken,
+            "proj_type": proj_type,
+            "head_one_first_name": head_one_first_name,
+            "head_one_last_name": head_one_last_name,
+            "head_one_ph_num": head_one_ph_num,
+            "head_two_first_name": head_two_first_name,
+            "head_two_last_name": head_two_last_name,
+            "head_two_ph_num": head_two_ph_num
+        }
+        project_heading.append(project_dict)
+
+    # Print the retrieved project information
+    # for project in project_heading:
+    #     print(project)
+    #     print()
+
     cur.close()
     conn.close()
-  
-    cur_projects = [
-            {"id": "1", "name": "Project A"},
-            {"id": "2", "name": "Project B"},
-            {"id": "3", "name": "Project C"},
-            {"id": "4", "name": "Project D"},
-            {"id": "5", "name": "Project E"},
-            {"id": "6", "name": "Project F"},
-            {"id": "7", "name": "Project G"},
-            {"id": "8", "name": "Project H"},
-            {"id": "9", "name": "Project I"},
-            {"id": "10", "name": "Project J"},
-            {"id": "11", "name": "Project K"}
-        ]
-    completed_projects = [
-            {"id": "1", "name": "Project A"},
-            {"id": "2", "name": "Project B"},
-            {"id": "3", "name": "Project C"},
-            {"id": "4", "name": "Project D"},
-            {"id": "5", "name": "Project E"},
-            {"id": "6", "name": "Project F"},
-            {"id": "7", "name": "Project G"},
-            {"id": "8", "name": "Project H"},
-            {"id": "9", "name": "Project I"},
-            {"id": "10", "name": "Project J"},
-            {"id": "11", "name": "Project K"}
-        ]
-   
-    last_6_transactions=[ 
-    { 'part1': 'Entry 1 Part 1', 'part2': 'Entry 1 Part 2', 'part3': 'Entry 1 Part 3', 'part4': 'Entry 1 Part 4', 'part5': 'Entry 1 Part 5' },
-    { 'part1': 'Entry 2 Part 1', 'part2': 'Entry 2 Part 2', 'part3': 'Entry 2 Part 3', 'part4': 'Entry 2 Part 4', 'part5': 'Entry 2 Part 5' },
-    { 'part1': 'Entry 3 Part 1', 'part2': 'Entry 3 Part 2', 'part3': 'Entry 3 Part 3', 'part4': 'Entry 3 Part 4', 'part5': 'Entry 3 Part 5' },
-    { 'part1': 'Entry 4 Part 1', 'part2': 'Entry 4 Part 2', 'part3': 'Entry 4 Part 3', 'part4': 'Entry 4 Part 4', 'part5': 'Entry 4 Part 5' },
-    { 'part1': 'Entry 5 Part 1', 'part2': 'Entry 5 Part 2', 'part3': 'Entry 5 Part 3', 'part4': 'Entry 5 Part 4', 'part5': 'Entry 5 Part 5' },
-    { 'part1': 'Entry 6 Part 1', 'part2': 'Entry 6 Part 2', 'part3': 'Entry 6 Part 3', 'part4': 'Entry 6 Part 4', 'part5': 'Entry 6 Part 5' },
-  ];
-   
-    project_heading=[
-       {"id": "1", "name": "Project A"},
-            {"id": "2", "name": "Project B"},
-            {"id": "3", "name": "Project C"},
-            {"id": "4", "name": "Project D"},
-            {"id": "5", "name": "Project E"},
-            {"id": "6", "name": "Project F"},
-            {"id": "7", "name": "Project G"},
-            {"id": "8", "name": "Project H"},
-            {"id": "9", "name": "Project I"},
-            {"id": "10", "name": "Project J"},
-            {"id": "11", "name": "Project K"}
-   ]
-    skills=['a','b']
+
+    # print(len(cur_projects))
+    # print(len(completed_projects))
+    # print(len(project_heading))
+
     return {
         'name': f"{first_name} {last_name}",
         'phone': str(phone),
         'email': email,
-        'cur_projects':cur_projects,
-        'completed_projects':completed_projects,
-        'num_cur_projects':len(cur_projects),
-        'last_6_transactions':last_6_transactions,
-        'num_completed_projects':len(completed_projects),
+        'cur_projects': cur_projects,
+        'completed_projects': completed_projects,
+        'num_cur_projects': len(cur_projects),
+        'last_6_transactions': last_6_transactions,
+        'num_completed_projects': len(completed_projects),
         'project_heading': project_heading,
-        'skills':skills
-
-      }
-
+        'skills': skills
+    }
 
 
-@app.route('/client',methods=['POST'])
+@app.route('/client', methods=['POST'])
 def get_client():
     data = request.json
-    client_id=data['id']
-    conn = psycopg2.connect("postgresql://postgres:postgres@localhost:5432/ems")
+    client_id = data['id']
+    conn = psycopg2.connect(
+        "postgresql://postgres:postgres@localhost:5432/ems")
     cursor = conn.cursor()
-    cursor.execute("SELECT name, ph_num, institution, email FROM clients WHERE id = %s", (client_id,))
-    
+    cursor.execute(
+        "SELECT name, ph_num, institution, email FROM clients WHERE id = %s", (client_id,))
+
     # Fetch the result
     result = cursor.fetchone()
     print(result)
-    # Close the cursor and connection
-    cursor.close()
-    conn.close()
-    
-    projects = [
-            {"id": "1", "name": "Project A"},
-            {"id": "2", "name": "Project B"},
-            {"id": "3", "name": "Project C"},
-            {"id": "4", "name": "Project D"},
-            {"id": "5", "name": "Project E"},
-            {"id": "6", "name": "Project F"},
-            {"id": "7", "name": "Project G"},
-            {"id": "8", "name": "Project H"},
-            {"id": "9", "name": "Project I"},
-            {"id": "10", "name": "Project J"},
-            {"id": "11", "name": "Project K"}
-        ]
-   
+
+    cursor.execute("SELECT p.id, p.main_dept, p.start_date, p.status, p.time_taken, p.proj_type, \
+                ph1.first_name AS head_one_first_name, ph1.last_name AS head_one_last_name, ph1.ph_num AS head_one_ph_num, \
+                ph2.first_name AS head_two_first_name, ph2.last_name AS head_two_last_name, ph2.ph_num AS head_two_ph_num \
+                FROM projects p \
+                JOIN clientproject cp ON p.id = cp.proj_id \
+                LEFT JOIN employee ph1 ON p.proj_head_one = ph1.id \
+                LEFT JOIN employee ph2 ON p.proj_head_two = ph2.id \
+                WHERE cp.client_id = %s", (client_id,))
+
+    # Fetch all the project records
+    projects = cursor.fetchall()
+
+    project_list = []
+    for project in projects:
+        project_id, main_dept, start_date, status, time_taken, proj_type, \
+            head_one_first_name, head_one_last_name, head_one_ph_num, \
+            head_two_first_name, head_two_last_name, head_two_ph_num = project
+
+        project_dict = {
+            "project_id": project_id,
+            "main_dept": main_dept,
+            "start_date": start_date.strftime("%Y-%m-%d"),
+            "status": status,
+            "time_taken": time_taken,
+            "proj_type": proj_type,
+            "head_one_first_name": head_one_first_name,
+            "head_one_last_name": head_one_last_name,
+            "head_one_ph_num": head_one_ph_num,
+            "head_two_first_name": head_two_first_name,
+            "head_two_last_name": head_two_last_name,
+            "head_two_ph_num": head_two_ph_num
+        }
+        project_list.append(project_dict)
+
+    print(project_list)
 
     return {
         'name': str(result[0]),
         'phone': str(result[1]),
         'institution': str(result[2]),
         'email': str(result[3]),
-        'projects':projects,
-        'num_projects':len(projects)
+        'projects': project_list,
+        'num_projects': len(projects)
     }
-  
 
 
+@app.route('/client_edit', methods=['POST'])
+def set_client():
+    data = request.json
+    client_id = data['id']
+    name = data['name']
+    email = data['email']
+    phone = data['phone']
+    institution = data['institution']
 
-@app.route('/hr',methods=['POST'])
+    conn = psycopg2.connect(
+        "postgresql://postgres:postgres@localhost:5432/ems")
+    cursor = conn.cursor()
+
+    update_query = "UPDATE clients SET name = %s, email = %s, ph_num = %s, institution = %s WHERE id = %s"
+    cursor.execute(update_query, (name, email, phone, institution, client_id))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return {'message': 'Client details updated successfully'}
+
+
+@app.route('/get_proj_employee', methods=['POST'])
+def get_employee_proj():
+    data = request.json
+    skill = data['skillset']
+    role = data['roleset']
+    project_id = data['project_id']
+
+    print(data)
+
+    conn = psycopg2.connect("postgresql://postgres:postgres@localhost:5432/ems")
+    cursor = conn.cursor()
+    query = "SELECT id FROM roles WHERE name = %s"
+    cursor.execute(query, (role,))
+
+    # Fetch the result
+    roleid = cursor.fetchone()
+
+    cursor.execute("SELECT employee_project_allocation(%s, %s, %s, %s)", (project_id, roleid[0], skill, 1))
+    result = cursor.fetchone()  # Fetch the result
+    employee_added = bool(result)
+    print(employee_added)
+
+   
+    return{'employee_added': employee_added}
+
+
+    
+
+@app.route('/add_review', methods=['POST'])
+def set_review():
+    data = request.json
+    print(data)
+    proj_id = data['projectId']
+    review = data['review']
+    sentiment_score = math.ceil(get_sentiment_score(review))
+    print(sentiment_score)
+
+    conn = psycopg2.connect(
+        "postgresql://postgres:postgres@localhost:5432/ems")
+    cursor = conn.cursor()
+
+    update_query = "UPDATE clientproject SET review = %s WHERE proj_id = %s"
+    cursor.execute(update_query, (review, proj_id))
+
+    # Update the performance score in the performancescore table
+    update_query = "UPDATE performancescore SET performance = %s WHERE proj_id = %s"
+    cursor.execute(update_query, (sentiment_score, proj_id))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return {'message': 'review added'}
+
+
+def write_to_log(entry):
+    """Write entry to the log file"""
+    with open(log_file, "a") as f:
+        f.write(entry + "\n")
+
+
+def read_log():
+    """Read the contents of the log file"""
+    with open(log_file, "r") as f:
+        log_entries = f.readlines()
+    return log_entries
+
+
+@app.route("/add_project", methods=["POST"])
+def add_project():
+    data = request.get_json()
+    client_id = data.get("client_id")
+    description = data.get("description")
+
+    # Generate a unique identification number for the entry
+    entry_id = len(read_log()) + 1
+
+    # Create the log entry
+    entry = f"ID: {entry_id} - Client ID: {client_id}, Description: {description}"
+
+    # Write the entry to the log file
+    write_to_log(entry)
+
+    return jsonify({"success": True, "entry_id": entry_id})
+
+
+@app.route("/delete_project/<int:entry_id>", methods=["DELETE"])
+def delete_project(entry_id):
+    log_entries = read_log()
+
+    if entry_id < 1 or entry_id > len(log_entries):
+        return jsonify({"success": False, "message": "Invalid entry ID"})
+
+    # Remove the entry from the log file
+    with open(log_file, "w") as f:
+        for i, entry in enumerate(log_entries):
+            if i + 1 != entry_id:
+                f.write(entry)
+
+    return jsonify({"success": True, "message": "Entry deleted successfully"})
+
+
+@app.route("/log_entries", methods=["GET"])
+def get_log_entries():
+    log_entries = read_log()
+    return jsonify(log_entries)
+
+@app.route('/employee_edit', methods=['POST'])
+def handle_edit_details():
+    data = request.get_json()  # Get the JSON data from the request body
+    
+    # Extract the values from the data
+    id = data['id']
+    fname = data['fname']
+    lname = data['lname']
+    email = data['email']
+    phone = data['phone']
+    
+    conn = psycopg2.connect("postgresql://postgres:postgres@localhost:5432/ems")
+    cursor = conn.cursor()
+
+    update_query = "UPDATE employee SET first_name = %s, last_name = %s, email = %s, ph_num = %s WHERE id = %s"
+    cursor.execute(update_query, (fname, lname, email, phone, id))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+    
+    return {'message': 'Empployee details updated successfully'}
+
+
+@app.route('/hr', methods=['POST'])
 def get_admin():
-   data = request.json
-  
-   #get projects function
-   cur_projects = [
-            {"id": "1", "name": "Project A"},
-            {"id": "2", "name": "Project B"},
-            {"id": "3", "name": "Project C"},
-            {"id": "4", "name": "Project D"},
-            {"id": "5", "name": "Project E"},
-            {"id": "6", "name": "Project F"},
-            {"id": "7", "name": "Project G"},
-            {"id": "8", "name": "Project H"},
-            {"id": "9", "name": "Project I"},
-            {"id": "10", "name": "Project J"},
-            {"id": "11", "name": "Project K"}
-        ]
-   completed_projects = [
-            {"id": "1", "name": "Project A"},
-            {"id": "2", "name": "Project B"},
-            {"id": "3", "name": "Project C"},
-            {"id": "4", "name": "Project D"},
-            {"id": "5", "name": "Project E"},
-            {"id": "6", "name": "Project F"},
-            {"id": "7", "name": "Project G"},
-            {"id": "8", "name": "Project H"},
-            {"id": "9", "name": "Project I"},
-            {"id": "10", "name": "Project J"},
-            {"id": "11", "name": "Project K"}
-        ]
-   
-   last_6_transactions=[ 
-    { 'part1': 'Entry 1 Part 1', 'part2': 'Entry 1 Part 2', 'part3': 'Entry 1 Part 3', 'part4': 'Entry 1 Part 4', 'part5': 'Entry 1 Part 5' },
-    { 'part1': 'Entry 2 Part 1', 'part2': 'Entry 2 Part 2', 'part3': 'Entry 2 Part 3', 'part4': 'Entry 2 Part 4', 'part5': 'Entry 2 Part 5' },
-    { 'part1': 'Entry 3 Part 1', 'part2': 'Entry 3 Part 2', 'part3': 'Entry 3 Part 3', 'part4': 'Entry 3 Part 4', 'part5': 'Entry 3 Part 5' },
-    { 'part1': 'Entry 4 Part 1', 'part2': 'Entry 4 Part 2', 'part3': 'Entry 4 Part 3', 'part4': 'Entry 4 Part 4', 'part5': 'Entry 4 Part 5' },
-    { 'part1': 'Entry 5 Part 1', 'part2': 'Entry 5 Part 2', 'part3': 'Entry 5 Part 3', 'part4': 'Entry 5 Part 4', 'part5': 'Entry 5 Part 5' },
-    { 'part1': 'Entry 6 Part 1', 'part2': 'Entry 6 Part 2', 'part3': 'Entry 6 Part 3', 'part4': 'Entry 6 Part 4', 'part5': 'Entry 6 Part 5' },
-  ];
-   
-   project_heading=[
-       {"id": "1", "name": "Project A"},
-            {"id": "2", "name": "Project B"},
-            {"id": "3", "name": "Project C"},
-            {"id": "4", "name": "Project D"},
-            {"id": "5", "name": "Project E"},
-            {"id": "6", "name": "Project F"},
-            {"id": "7", "name": "Project G"},
-            {"id": "8", "name": "Project H"},
-            {"id": "9", "name": "Project I"},
-            {"id": "10", "name": "Project J"},
-            {"id": "11", "name": "Project K"}
+    data = request.json
 
-   ]
-   skills=['a','b']
-   return {
-        'name':"sid", 
+    # get projects function
+    cur_projects = [
+        {"id": "1", "name": "Project A"},
+        {"id": "2", "name": "Project B"},
+        {"id": "3", "name": "Project C"},
+        {"id": "4", "name": "Project D"},
+        {"id": "5", "name": "Project E"},
+        {"id": "6", "name": "Project F"},
+        {"id": "7", "name": "Project G"},
+        {"id": "8", "name": "Project H"},
+        {"id": "9", "name": "Project I"},
+        {"id": "10", "name": "Project J"},
+        {"id": "11", "name": "Project K"}
+    ]
+    completed_projects = [
+        {"id": "1", "name": "Project A"},
+        {"id": "2", "name": "Project B"},
+        {"id": "3", "name": "Project C"},
+        {"id": "4", "name": "Project D"},
+        {"id": "5", "name": "Project E"},
+        {"id": "6", "name": "Project F"},
+        {"id": "7", "name": "Project G"},
+        {"id": "8", "name": "Project H"},
+        {"id": "9", "name": "Project I"},
+        {"id": "10", "name": "Project J"},
+        {"id": "11", "name": "Project K"}
+    ]
+
+    last_6_transactions = [
+        {'part1': 'Entry 1 Part 1', 'part2': 'Entry 1 Part 2', 'part3': 'Entry 1 Part 3',
+            'part4': 'Entry 1 Part 4', 'part5': 'Entry 1 Part 5'},
+        {'part1': 'Entry 2 Part 1', 'part2': 'Entry 2 Part 2', 'part3': 'Entry 2 Part 3',
+            'part4': 'Entry 2 Part 4', 'part5': 'Entry 2 Part 5'},
+        {'part1': 'Entry 3 Part 1', 'part2': 'Entry 3 Part 2', 'part3': 'Entry 3 Part 3',
+            'part4': 'Entry 3 Part 4', 'part5': 'Entry 3 Part 5'},
+        {'part1': 'Entry 4 Part 1', 'part2': 'Entry 4 Part 2', 'part3': 'Entry 4 Part 3',
+            'part4': 'Entry 4 Part 4', 'part5': 'Entry 4 Part 5'},
+        {'part1': 'Entry 5 Part 1', 'part2': 'Entry 5 Part 2', 'part3': 'Entry 5 Part 3',
+            'part4': 'Entry 5 Part 4', 'part5': 'Entry 5 Part 5'},
+        {'part1': 'Entry 6 Part 1', 'part2': 'Entry 6 Part 2', 'part3': 'Entry 6 Part 3',
+            'part4': 'Entry 6 Part 4', 'part5': 'Entry 6 Part 5'},
+    ]
+
+    project_heading = [
+        {"id": "1", "name": "Project A"},
+        {"id": "2", "name": "Project B"},
+        {"id": "3", "name": "Project C"},
+        {"id": "4", "name": "Project D"},
+        {"id": "5", "name": "Project E"},
+        {"id": "6", "name": "Project F"},
+        {"id": "7", "name": "Project G"},
+        {"id": "8", "name": "Project H"},
+        {"id": "9", "name": "Project I"},
+        {"id": "10", "name": "Project J"},
+        {"id": "11", "name": "Project K"}
+
+    ]
+    skills = ['a', 'b']
+    return {
+        'name': "sid",
         'phone': "8xxxxxx8",
-        'institution':"IIT pkd",
-        'email':"sid@gmail.com",
-        'cur_projects':cur_projects,
-        'completed_projects':completed_projects,
-        'num_cur_projects':len(cur_projects),
-        'last_6_transactions':last_6_transactions,
-        'num_completed_projects':len(completed_projects),
+        'institution': "IIT pkd",
+        'email': "sid@gmail.com",
+        'cur_projects': cur_projects,
+        'completed_projects': completed_projects,
+        'num_cur_projects': len(cur_projects),
+        'last_6_transactions': last_6_transactions,
+        'num_completed_projects': len(completed_projects),
         'project_heading': project_heading,
-        'skills':skills
+        'skills': skills
 
-      }
+    }
+
+
 if __name__ == "__main__":
     app.run("0.0.0.0")
