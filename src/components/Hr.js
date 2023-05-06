@@ -1,6 +1,7 @@
 import React from 'react';
 import "../components/hr.css"
 import { OverlayTrigger, Popover, Form, Button } from 'react-bootstrap';
+import axios from 'axios';
 
 import { Dropdown } from "react-bootstrap";
 
@@ -28,9 +29,35 @@ class Employee extends React.Component {
       selectedSkill: "",
       selectedRole: "",
       selectedDept: "",
-
+      searchQuery: '',
+      results: [],
+      error: null,
+      currentPage: 0,
+      entriesPerPage: 6,
+      Totalpages:0
     };
   }
+
+
+  handleNextPage = () => {
+    const { currentPage, entriesPerPage } = this.state;
+    const { entries } = this.props;
+    const {TotalPages} =  this.state;
+    if (currentPage < TotalPages - 1) {
+      this.setState((prevState) => ({
+        currentPage: prevState.currentPage + 1,
+      }));
+    }
+  };
+
+  handlePreviousPage = () => {
+    const { currentPage } = this.state;
+    if (currentPage > 0) {
+      this.setState((prevState) => ({
+        currentPage: prevState.currentPage - 1,
+      }));
+    }
+  };
 
   handleroleSelect = (eventKey) => {
     // Update the selectedRole state when a role is selected
@@ -46,7 +73,7 @@ class Employee extends React.Component {
     this.setState({ selectedDept: eventKey });
   };
 
-  handleaddproject = (clientId,entry_id) => {
+  handleaddproject = (clientId, entry_id) => {
     const { selectedSkill, selectedRole } = this.state;
 
     fetch('/add_proj_head_client', {
@@ -59,7 +86,7 @@ class Employee extends React.Component {
         head1: selectedSkill,
         head2: selectedRole,
         dept: this.state.selectedDept,
-        entry:entry_id
+        entry: entry_id
 
       }),
     })
@@ -74,10 +101,10 @@ class Employee extends React.Component {
       .catch((error) => {
         console.error('Error:', error);
       });
-      this.fetch_hr();
+    this.fetch_hr();
   };
 
-  fetch_hr(){
+  fetch_hr() {
     fetch('/hr', {
       method: 'POST',
       headers: {
@@ -98,7 +125,8 @@ class Employee extends React.Component {
           project_heading: data.project_heading,
           num_completed_projects: data.num_completed_projects,
           skills: data.skills,
-          requested_projects: data.requested_projects
+          requested_projects: data.requested_projects,
+          TotalPages:data.len_transac
 
         })
       );
@@ -127,7 +155,8 @@ class Employee extends React.Component {
           project_heading: data.project_heading,
           num_completed_projects: data.num_completed_projects,
           skills: data.skills,
-          requested_projects: data.requested_projects
+          requested_projects: data.requested_projects,
+          TotalPages:data.len_transac
 
         })
       );
@@ -184,6 +213,26 @@ class Employee extends React.Component {
     window.location.reload();
   };
 
+  handleSearchChange = (event) => {
+    this.setState({ searchQuery: event.target.value });
+  }
+
+  handleSearch = () => {
+    const { searchQuery } = this.state;
+
+    // Make a request to the backend
+    axios.post('/searchEndpoint', { query: searchQuery })
+      .then(response => {
+        const { data } = response;
+        this.setState({ results: data, error: null });
+      })
+      .catch(error => {
+        this.setState({ results: [], error: 'An error occurred while searching.' });
+      });
+  }
+
+  
+
   render() {
 
     const imageStyle = {
@@ -193,6 +242,11 @@ class Employee extends React.Component {
       width: '130px',
       height: '130px',
     };
+    const { searchQuery, results, error } = this.state;
+    const { entries, currentPage, entriesPerPage } = this.state;
+    const startIndexx = currentPage * entriesPerPage;
+    const endIndexx = startIndexx + entriesPerPage;
+    const currentEntries = entries.slice(startIndexx, endIndexx);
 
     return (
 
@@ -200,6 +254,21 @@ class Employee extends React.Component {
         <button type="button" className="btn btn-outline-danger logout-button" onClick={this.handleLogout}>
           Logout
         </button>
+        <div>
+       
+        <input type="text" value={searchQuery} onChange={this.handleSearchChange} />
+        <button onClick={this.handleSearch}>Search Projects by reviews</button>
+
+        {error && <p>{error}</p>}
+        <p><strong><div id="textforquery"></div></strong></p>
+        {results.length > 0 && (
+          <ul>
+            {results.map(result => (
+              <li key={result.id}><div id="table-text"> Found in Project ID : {result.id}</div></li>
+            ))}
+          </ul>
+        )}
+      </div>
         <table className="table table-striped">
           <thead>
             <tr>
@@ -401,10 +470,10 @@ class Employee extends React.Component {
                                       <Dropdown.Item eventKey="R&D">R&D</Dropdown.Item>
                                       <Dropdown.Item eventKey="Marketing">Marketing</Dropdown.Item>
                                       <Dropdown.Item eventKey="Product development">Product development</Dropdown.Item>
-                                     
+
                                     </Dropdown.Menu>
                                   </Dropdown>
-                                  <button type="button" className="add-employee" onClick={() => { console.log(project); this.handleaddproject(project.client_id,project.entry_id); }}>
+                                  <button type="button" className="add-employee" onClick={() => { console.log(project); this.handleaddproject(project.client_id, project.entry_id); }}>
                                     ADD Project
                                   </button>
                                   <div>
@@ -432,29 +501,47 @@ class Employee extends React.Component {
         </table>
 
 
-
         <table className="table table-striped">
           <thead>
             <tr>
-              <th><div id="table-text">Part 1</div></th>
-              <th><div id="table-text">Part 1</div></th>
-              <th><div id="table-text">Part 1</div></th>
-              <th><div id="table-text">Part 1</div></th>
-              <th><div id="table-text">Part 1</div></th>
+              <th>
+                <div id="table-text">Emp ID</div>
+              </th>
+              <th>
+                <div id="table-text">Projects Done</div>
+              </th>
+              <th>
+                <div id="table-text">Total Score</div>
+              </th>
+              <th>
+                <div id="table-text">Current Projects</div>
+              </th>
             </tr>
           </thead>
           <tbody>
-            {this.state.entries.slice(0, 6).map((entry, index) => (
+            {currentEntries.map((entry, index) => (
               <tr key={index}>
-                <td><div id="table-text">{entry.part1}</div></td>
-                <td><div id="table-text">{entry.part1}</div></td>
-                <td><div id="table-text">{entry.part1}</div></td>
-                <td><div id="table-text">{entry.part1}</div></td>
-                <td><div id="table-text">{entry.part1}</div></td>
+                <td>
+                  <div id="table-text">{entry.part1}</div>
+                </td>
+                <td>
+                  <div id="table-text">{entry.part1}</div>
+                </td>
+                <td>
+                  <div id="table-text">{entry.part1}</div>
+                </td>
+                <td>
+                  <div id="table-text">{entry.part1}</div>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
+
+        <div>
+          <button onClick={this.handlePreviousPage}>Previous</button>
+          <button onClick={this.handleNextPage}>Next</button>
+        </div>
 
 
       </div>

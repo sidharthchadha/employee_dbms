@@ -443,17 +443,13 @@ def add_project():
     client_id = data.get("client_id")
     description = data.get("description")
 
-    # Generate a unique identification number for the entry
     entry_id = len(read_log()) + 1
 
-    # Create the log entry
+   
     entry = f"ID: {entry_id} - Client ID: {client_id}, Description: {description}"
-
-    # Write the entry to the log file
     write_to_log(entry)
 
     return jsonify({"success": True, "entry_id": entry_id})
-
 
 
 
@@ -589,24 +585,27 @@ WHERE p.status = 'Completed';
         }
         completed_projects.append(project_dict)
 
-    last_6_transactions = [
-        {'part1': 'Entry 1 Part 1', 'part2': 'Entry 1 Part 2', 'part3': 'Entry 1 Part 3',
-            'part4': 'Entry 1 Part 4', 'part5': 'Entry 1 Part 5'},
-        {'part1': 'Entry 2 Part 1', 'part2': 'Entry 2 Part 2', 'part3': 'Entry 2 Part 3',
-            'part4': 'Entry 2 Part 4', 'part5': 'Entry 2 Part 5'},
-        {'part1': 'Entry 3 Part 1', 'part2': 'Entry 3 Part 2', 'part3': 'Entry 3 Part 3',
-            'part4': 'Entry 3 Part 4', 'part5': 'Entry 3 Part 5'},
-        {'part1': 'Entry 4 Part 1', 'part2': 'Entry 4 Part 2', 'part3': 'Entry 4 Part 3',
-            'part4': 'Entry 4 Part 4', 'part5': 'Entry 4 Part 5'},
-        {'part1': 'Entry 5 Part 1', 'part2': 'Entry 5 Part 2', 'part3': 'Entry 5 Part 3',
-            'part4': 'Entry 5 Part 4', 'part5': 'Entry 5 Part 5'},
-        {'part1': 'Entry 6 Part 1', 'part2': 'Entry 6 Part 2', 'part3': 'Entry 6 Part 3',
-            'part4': 'Entry 6 Part 4', 'part5': 'Entry 6 Part 5'},
-    ]
+    
     requested_projects = get_all_projects()
-    print(requested_projects)
+    print(requested_projects
+          )
+    
+    
+    cursor.callproc('employee_performance')
+    results = cursor.fetchall()
+    print(results)
+    last_6_transactions = []
 
- 
+    for row in results:
+        entry = {
+            'part1': row[0],
+            'part2': row[1],
+            'part3': row[2],
+            'part4': row[3],
+           
+        }
+        last_6_transactions.append(entry)
+    
     return {
         'name': "sid",
         'phone': "8xxxxxx8",
@@ -617,7 +616,8 @@ WHERE p.status = 'Completed';
         'num_cur_projects': len(cur_projects),
         'last_6_transactions': last_6_transactions,
         'num_completed_projects': len(completed_projects),
-        'requested_projects': requested_projects
+        'requested_projects': requested_projects,
+        'len_transac':len(last_6_transactions)
 
     }
 
@@ -685,7 +685,28 @@ def set_project():
         return jsonify({"project_added": False})
 
     
-    
+
+def execute_query(word):
+    conn = psycopg2.connect("postgresql://postgres:postgres@localhost:5432/ems")
+    cursor = conn.cursor()
+    query = f"SELECT * FROM search_review('{word}')"
+    cursor.execute(query)
+    results = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return results
+
+@app.route('/searchEndpoint', methods=['POST'])
+def search_endpoint():
+    try:
+        search_word =request.json['query']
+        results = execute_query(search_word)
+        response = [{'id': row[0], 'cnt': row[1]} for row in results]
+        print(response)
+        return jsonify(response)
+    except (psycopg2.Error, KeyError) as e:
+        return jsonify({'error': 'An error occurred during the search.'}), 500
+
 
 if __name__ == "__main__":
     app.run("0.0.0.0")
