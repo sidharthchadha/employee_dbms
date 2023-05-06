@@ -1,100 +1,72 @@
-/* employee.css */
-
-/* Apply vivid color theme */
-body {
-  background-color: #f9f9f9;
-  color: #333333;
+.employee-container {
+  display: flex;
+  justify-content: center;
 }
 
-/* Add lining to tables */
-table {
-  border-collapse: separate;
-  border-spacing: 0;
-  border: 1px solid #fff;
+.employee-info {
+  text-align: center;
+  margin-right: 50px;
 }
 
-td,
-th {
-  border: 1px solid #cccccc;
+.employee-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.employee-table th,
+.employee-table td {
   padding: 10px;
+  border: 1px solid #ccc;
 }
 
-/* Apply vibrant colors to headings */
-h2,
-h3 {
-  color: #3366cc;
+.employee-table th {
+  background-color: #f0f0f0;
 }
 
-/* Apply modern fonts */
-p {
-  font-family: "Helvetica", sans-serif;
+.employee-projects-box {
+  margin-bottom: 30px;
 }
 
-/* Add curvy lines for a modern look */
-.client-container {
-  border: 2px solid #dddddd;
-  border-radius: 10px;
-  padding: 20px;
-  margin: 20px;
-}
-
-.client-info {
-  margin-bottom: 20px;
-  text-decoration-color: #555555;
+.employee-headed-projects-box {
+  margin-bottom: 30px;
 }
 
 .pagination {
   display: flex;
   justify-content: center;
-  margin-top: 10px;
+  margin-top: 20px;
 }
 
 .pagination .btn {
-  background-color: #3366cc;
-  color: #ffffff;
-  padding: 5px 10px;
   margin: 0 5px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+}
+.logout-button {
+    
+  margin-top: 230px;
+  margin-right: 0px;
+  border: 1px solid #dc3545;
 }
 
-.pagination .btn:disabled {
-  background-color: #888888;
-  cursor: not-allowed;
+.edit-button {
+
+  margin-top: 220px;
+  margin-right: 30px;
+  border: 1px solid #dc3545;
 }
 
-/* Update dropdown color to match the theme */
-.select-dropdown {
-  background-color: #3366cc;
-  color: #ffffff;
-  border: 1px solid #ffffff;
+.client-heading {
+  text-align: center;
+  margin-bottom: 30px;
 }
 
-/* Add hover effect to buttons */
-.btn {
-  background-color: #3366cc;
-  color: #ffffff;
-  padding: 5px 10px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+#table-text {
+  display: inline;
+  color: #f0f0f0;
 }
 
-.btn:hover {
-  background-color: #444444;
-}
+#form-text{
+  color: #0b0b0b;
+  display: inline;
+  position: relative;
 
-/* Add hover effect to accordion buttons */
-.accordion-button {
-  background-color: #3366cc;
-  color: #ffffff;
-  padding: 5px 10px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.accordion-button:hover {
-  background-color: #444444;
 }

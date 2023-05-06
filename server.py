@@ -678,21 +678,14 @@ def set_project():
 
         conn.commit()
         file.close()
-
+        cursor.close()
         return jsonify({"project_added": True})
 
     except (psycopg2.Error, KeyError) as e:
         return jsonify({"project_added": False})
 
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if conn is not None:
-            conn.close()
-
-
     
-
+    
 
 if __name__ == "__main__":
     app.run("0.0.0.0")

@@ -240,27 +240,30 @@ class Employee extends React.Component {
       width: '130px',
       height: '130px',
     };
+    
     const { employeeAdded } = this.state;
 
     return (
 
       <div className="client-container">
+        
         <div className="client-info">
-          <img src="https://i.pravatar.cc/300" alt="Profile" style={imageStyle} />
-          <button type="button" className="btn btn-outline-danger logout-button" onClick={this.handleLogout}>
+        <button type="button" className="btn btn-outline-danger logout-button" onClick={this.handleLogout}>
             Logout
           </button>
+          <img src="https://i.pravatar.cc/300" alt="Profile" style={imageStyle} />
+          
           <OverlayTrigger
             trigger="click"
             placement="bottom"
             show={this.state.showEditPopover}
             overlay={
               <Popover>
-                <Popover.Header as="h3">Edit Details</Popover.Header>
+                <Popover.Header as="h3"><div id="form-text">Edit Details</div></Popover.Header>
                 <Popover.Body>
                   <Form onSubmit={this.handleEditFormSubmit}>
                     <Form.Group controlId="formFName">
-                      <Form.Label>First Name</Form.Label>
+                      <Form.Label><div id="form-text">First Name</div></Form.Label>
                       <Form.Control
                         type="text"
                         name="editedfName"
@@ -269,7 +272,7 @@ class Employee extends React.Component {
                       />
                     </Form.Group>
                     <Form.Group controlId="formLName">
-                      <Form.Label>Last Name</Form.Label>
+                      <Form.Label><div id="form-text">Last Name</div></Form.Label>
                       <Form.Control
                         type="text"
                         name="editedlName"
@@ -278,7 +281,7 @@ class Employee extends React.Component {
                       />
                     </Form.Group>
                     <Form.Group controlId="formPhone">
-                      <Form.Label>Phone</Form.Label>
+                      <Form.Label><div id="form-text">Phone</div></Form.Label>
                       <Form.Control
                         type="text"
                         name="editedPhone"
@@ -287,7 +290,7 @@ class Employee extends React.Component {
                       />
                     </Form.Group>
                     <Form.Group controlId="formEmail">
-                      <Form.Label>Email</Form.Label>
+                      <Form.Label><div id="form-text">Email</div></Form.Label>
                       <Form.Control
                         type="email"
                         name="editedEmail"
@@ -296,22 +299,29 @@ class Employee extends React.Component {
                       />
                     </Form.Group>
                     <Button variant="primary" type="submit">
-                      Save
+                    Save
                     </Button>
                   </Form>
                 </Popover.Body>
               </Popover>
             }
           >
+            
             <button type="button" className="btn btn-outline-primary edit-button" onClick={this.handleEditDetails}>
               Edit Details
             </button>
+            
+            
           </OverlayTrigger>
+         
           <br>
+          
           </br>
           <h2>{this.state.name}</h2>
           <p>Phone: {this.state.phone}</p>
+          
           <p>Email: {this.state.email}</p>
+          
 
         </div>
 
@@ -322,7 +332,7 @@ class Employee extends React.Component {
                 <h3>Current Projects</h3>
                 {this.state.cur_projects.slice(this.state.startIndex, this.state.endIndex).map(project => (
                   <div key={project.project_id}>
-                    <p>{project.main_dept}</p>
+                   <p><strong><div id="table-text">{project.main_dept}</div> </strong></p>
                     <div className="accordion" id="accordionExample">
                       <div className="accordion-item">
                         <h2 className="accordion-header">
@@ -369,26 +379,7 @@ class Employee extends React.Component {
                               <p>Status: {project.status}</p>
                               <p>Time Taken: {project.time_taken}</p>
                               <p>Project Type: {project.proj_type}</p>
-                              {project.status === 'Completed' && (
-                                <div>
-                                  <form onSubmit={(e) => this.handleReviewSubmit(e, project.project_id)}>
-                                    <div className="form-group">
-                                      <label htmlFor="review">Review</label>
-                                      <textarea
-                                        id="review"
-                                        className="form-control"
-                                        value={this.state.review}
-                                        onChange={(e) => this.setState({ review: e.target.value })}
-                                      ></textarea>
-                                    </div>
-                                    <button type="submit" className="btn btn-primary">
-                                      Submit Review
-                                    </button>
-                                  </form>
-                                  {this.state.successMessage && <p>{this.state.successMessage}</p>}
-                                </div>
-                              )}
-
+                              
                             </strong>
                           </div>
                         </div>
@@ -406,7 +397,7 @@ class Employee extends React.Component {
                 <h3>Projects Headed</h3>
                 {this.state.project_heading.slice(this.state.startIndex3, this.state.endIndex3).map(project => (
                   <div key={project.id}>
-                    <p><strong>Project ID : {project.main_dept}</strong></p>
+                    <p><strong><div id="table-text">{project.main_dept}</div> </strong></p>
                     <div className="accordion" id="accordionExample">
                       <div className="accordion-item">
                         <h2 className="accordion-header">
@@ -458,6 +449,7 @@ class Employee extends React.Component {
                                   <Dropdown onSelect={this.handleroleSelect}>
                                     <Dropdown.Toggle variant="primary" id="roleSelectDropdown">
                                       Role
+                                      <br></br>
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu>
                                       <Dropdown.Item eventKey="Production Manager">Production Manager</Dropdown.Item>
@@ -477,9 +469,11 @@ class Employee extends React.Component {
                                       <Dropdown.Item eventKey="Training assistant">Training assistant</Dropdown.Item>
                                     </Dropdown.Menu>
                                   </Dropdown>
+                                  <br></br>
                                   <Dropdown onSelect={this.handleSkillSelect}>
                                     <Dropdown.Toggle variant="primary" id="skillSelectDropdown">
                                       Skill
+                                      <br></br>
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu>
                                       <Dropdown.Item eventKey="Web development">Web development</Dropdown.Item>
@@ -487,6 +481,7 @@ class Employee extends React.Component {
                                       <Dropdown.Item eventKey="Data Science">Data Science</Dropdown.Item>
                                     </Dropdown.Menu>
                                   </Dropdown>
+                                  <br></br>
                                   <button type="button" className="add-employee" onClick={() => { console.log(project); this.handleaddemployee(project.project_id); }}>
                                     ADD Employee
                                   </button>
@@ -596,21 +591,21 @@ class Employee extends React.Component {
         <table className="table table-striped">
           <thead>
             <tr>
-              <th>Transaction ID</th>
-              <th>Emp ID</th>
-              <th>Date</th>
-              <th>Amount</th>
-              <th>Status</th>
+              <th><div id="table-text">Transaction ID</div></th>
+              <th><div id="table-text">Emp ID</div></th>
+              <th><div id="table-text">Date</div></th>
+              <th><div id="table-text">Amount</div></th>
+              <th><div id="table-text">Status</div></th>
             </tr>
           </thead>
           <tbody>
             {this.state.entries.slice(0, 6).map((entry, index) => (
               <tr key={index}>
-                <td>{entry.transaction_id}</td>
-                <td>{entry.emp_id}</td>
-                <td>{entry.transfer_date}</td>
-                <td>{entry.amount}</td>
-                <td>{entry.status}</td>
+                <td><div id="table-text">{entry.transaction_id}</div></td>
+                <td><div id="table-text">{entry.emp_id}</div></td>
+                <td><div id="table-text">{entry.transfer_date}</div></td>
+                <td><div id="table-text">{entry.amount}</div></td>
+                <td><div id="table-text">{entry.status}</div></td>
               </tr>
             ))}
           </tbody>

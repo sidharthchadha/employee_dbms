@@ -5,6 +5,7 @@
   }
 
   .logout-button {
+    
     float: right;
     margin-top: 200px;
     margin-right: 80px;
@@ -20,6 +21,7 @@
   
   
   .logout-button:hover {
+   
     background-color: #dc3545;
     color: #fff;
   }
@@ -88,5 +90,9 @@
   .client-info img {
     border-radius: 50%;
   }
+
+#text-form {
+  color: black;
+}
   
   

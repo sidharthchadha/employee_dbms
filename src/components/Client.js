@@ -216,11 +216,11 @@ class Client extends React.Component {
               show={this.state.showEditPopover}
               overlay={
                 <Popover>
-                  <Popover.Header as="h3">Edit Details</Popover.Header>
+                  <Popover.Header as="h3"><div id="text-form">Edit Details</div></Popover.Header>
                   <Popover.Body>
                     <Form onSubmit={this.handleEditFormSubmit}>
                       <Form.Group controlId="formName">
-                        <Form.Label>Name</Form.Label>
+                        <Form.Label><div id="text-form">Name</div></Form.Label>
                         <Form.Control
                           type="text"
                           name="editedName"
@@ -229,7 +229,7 @@ class Client extends React.Component {
                         />
                       </Form.Group>
                       <Form.Group controlId="formPhone">
-                        <Form.Label>Phone</Form.Label>
+                        <Form.Label><div id="text-form">Phone</div></Form.Label>
                         <Form.Control
                           type="text"
                           name="editedPhone"
@@ -238,7 +238,7 @@ class Client extends React.Component {
                         />
                       </Form.Group>
                       <Form.Group controlId="formInstitution">
-                        <Form.Label>Institution</Form.Label>
+                        <Form.Label><div id="text-form">Institution</div></Form.Label>
                         <Form.Control
                           type="text"
                           name="editedInstitution"
@@ -247,7 +247,7 @@ class Client extends React.Component {
                         />
                       </Form.Group>
                       <Form.Group controlId="formEmail">
-                        <Form.Label>Email</Form.Label>
+                        <Form.Label><div id="text-form">Email</div></Form.Label>
                         <Form.Control
                           type="email"
                           name="editedEmail"
@@ -267,6 +267,7 @@ class Client extends React.Component {
                 Edit Details
               </button>
             </OverlayTrigger>
+            
           </div>
           <strong>
             <p>Phone: {this.state.phone}</p>

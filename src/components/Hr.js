@@ -273,7 +273,7 @@ class Employee extends React.Component {
                 <h3>Completed Projects</h3>
                 {this.state.completed_projects.slice(this.state.startIndex2, this.state.endIndex2).map(project => (
                   <div key={project.id}>
-                    <p>{project.main_dept}</p>
+                    <div id="table-text"><strong>Client ID : {project.main_dept}</strong></div>
                     <div className="accordion" id="accordionExample">
                       <div className="accordion-item">
                         <h2 className="accordion-header">
@@ -348,7 +348,7 @@ class Employee extends React.Component {
                 <h3>Requested Projects</h3>
                 {this.state.requested_projects.slice(this.state.startIndex3, this.state.endIndex3).map(project => (
                   <div key={project.entry_id}>
-                    <p><strong>Client ID : {project.client_id}</strong></p>
+                    <div id="table-text"><strong>Client ID : {project.client_id}</strong></div>
                     <div className="accordion" id="accordionExample">
                       <div className="accordion-item">
                         <h2 className="accordion-header">
@@ -385,6 +385,9 @@ class Employee extends React.Component {
                                       <Dropdown.Item eventKey="3">Emp ID 3</Dropdown.Item>
                                       <Dropdown.Item eventKey="4">Emp ID 4</Dropdown.Item>
                                       <Dropdown.Item eventKey="5">Emp ID 5</Dropdown.Item>
+                                      <Dropdown.Item eventKey="6">Emp ID 6</Dropdown.Item>
+                                      <Dropdown.Item eventKey="7">Emp ID 7</Dropdown.Item>
+                                      <Dropdown.Item eventKey="8">Emp ID 8</Dropdown.Item>
 
                                     </Dropdown.Menu>
                                   </Dropdown>
@@ -397,13 +400,12 @@ class Employee extends React.Component {
                                       <Dropdown.Item eventKey="IT Services">IT Services</Dropdown.Item>
                                       <Dropdown.Item eventKey="R&D">R&D</Dropdown.Item>
                                       <Dropdown.Item eventKey="Marketing">Marketing</Dropdown.Item>
-                                      <Dropdown.Item eventKey="Product Development">Product Development</Dropdown.Item>
-                                      <Dropdown.Item eventKey="5">Emp ID 5</Dropdown.Item>
-
+                                      <Dropdown.Item eventKey="Product development">Product development</Dropdown.Item>
+                                     
                                     </Dropdown.Menu>
                                   </Dropdown>
                                   <button type="button" className="add-employee" onClick={() => { console.log(project); this.handleaddproject(project.client_id,project.entry_id); }}>
-                                    ADD Employee
+                                    ADD Project
                                   </button>
                                   <div>
                                     {this.state.project_Added && <p>Employee added successfully!</p>}
@@ -434,21 +436,21 @@ class Employee extends React.Component {
         <table className="table table-striped">
           <thead>
             <tr>
-              <th>Part 1</th>
-              <th>Part 2</th>
-              <th>Part 3</th>
-              <th>Part 4</th>
-              <th>Part 5</th>
+              <th><div id="table-text">Part 1</div></th>
+              <th><div id="table-text">Part 1</div></th>
+              <th><div id="table-text">Part 1</div></th>
+              <th><div id="table-text">Part 1</div></th>
+              <th><div id="table-text">Part 1</div></th>
             </tr>
           </thead>
           <tbody>
             {this.state.entries.slice(0, 6).map((entry, index) => (
               <tr key={index}>
-                <td>{entry.part1}</td>
-                <td>{entry.part2}</td>
-                <td>{entry.part3}</td>
-                <td>{entry.part4}</td>
-                <td>{entry.part5}</td>
+                <td><div id="table-text">{entry.part1}</div></td>
+                <td><div id="table-text">{entry.part1}</div></td>
+                <td><div id="table-text">{entry.part1}</div></td>
+                <td><div id="table-text">{entry.part1}</div></td>
+                <td><div id="table-text">{entry.part1}</div></td>
               </tr>
             ))}
           </tbody>

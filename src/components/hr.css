@@ -98,4 +98,8 @@ body {
   .accordion-button:hover {
     background-color: #444444;
   }
+
+  #table-text{
+    color:#fff;
+  }
   
